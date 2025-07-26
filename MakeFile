@@ -1,0 +1,3 @@
+.include env
+coverage:; forge coverage --report debug
+locally_test:;forge test -vvv
