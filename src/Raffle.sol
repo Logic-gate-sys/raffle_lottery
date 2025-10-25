@@ -1,26 +1,27 @@
-// Layout of Contract:
-// version
-// imports
-// errors
-// interfaces, libraries, contracts
-// Type declarations
-// State variables
-// Events
-// Modifiers
-// Functions
-
-// Layout of Functions:
-// constructor
-// receive function (if exists)
-// fallback function (if exists)
-// external
-// public
-// internal
-// private
-// view & pure functions
-
 //SPDX-License-Identifier:MIT
 pragma solidity ^0.8.19;
+
+/**
+ *   Layout of Contract:
+ *  version
+ *  imports
+ *  errors
+ *  interfaces, libraries, contracts
+ *  Type declarations
+ *  State variables
+ *  Events
+ *  Modifiers
+ *  Function
+ *  Layout of Functions:
+ *  constructor
+ *  receive function (if exists)
+ *  fallback function (if exists)
+ *  external
+ *  public
+ *  internal
+ *  private
+ *  view & pure functions
+ */
 
 import {VRFConsumerBaseV2Plus} from "@chainlink/contracts/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
 import {VRFV2PlusClient} from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
@@ -98,19 +99,25 @@ contract Raffle is VRFConsumerBaseV2Plus {
         emit RaffleEntered(msg.sender); // emit event
     }
 
-    /* 
+    /*
     What should be achieved with pick-winner :
-    1. Get a random number 
+    1. Get a random number
     2. Use the random number to pick a winner
     3 Automate the process
     */
     //check upkeep
-    function checkUpkeep(bytes memory /* checkData */ ) public view returns (bool) {
+    function checkUpkeep(
+        bytes memory /* checkData */
+    )
+        public
+        view
+        returns (bool)
+    {
         /* Upkeep is needed iff:
-    1. Time interval has passed 
-    2. Raffle State is OPEN
-    3. Raffle has balance
-        */
+        1. Time interval has passed
+        2. Raffle State is OPEN
+        3. Raffle has balance
+            */
         (bool timeIsUp) = block.timestamp - s_lastTimestamp >= i_interval;
         (bool raffleIsOpen) = (s_raffleState == RaffleState.OPEN);
         (bool raffleHasEth) = (address(this).balance > 0);
@@ -118,7 +125,11 @@ contract Raffle is VRFConsumerBaseV2Plus {
         return upkeepNeeded;
     }
 
-    function performUpkeep(bytes calldata /* performData */ ) external {
+    function performUpkeep(
+        bytes calldata /* performData */
+    )
+        external
+    {
         (bool upKeepNeeded) = checkUpkeep("");
         if (!upKeepNeeded) {
             revert Raffle_UpkeepNotNeeded(address(this).balance, s_players.length, i_interval);
@@ -139,8 +150,8 @@ contract Raffle is VRFConsumerBaseV2Plus {
         });
         uint256 request_id = s_vrfCoordinator.requestRandomWords(request_struct);
         /*
-        1. Request a random number 
-        2. get the random number in a callback functions 
+        1. Request a random number
+        2. get the random number in a callback functions
         3. use random number to get the winner
          */
         emit LogResult(request_id);
@@ -153,6 +164,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
         uint256 index_of_winner = randomWords[0] % s_players.length;
         address payable winner = s_players[index_of_winner];
         mostRecentWinner = winner;
+
         /* ------------------EFFECTS -------------------- */
         s_players = new address payable[](0); //initialise a new empty array
         s_lastTimestamp = block.timestamp;
@@ -161,16 +173,16 @@ contract Raffle is VRFConsumerBaseV2Plus {
         // open raffle state after winner is picked and paid
         s_raffleState = RaffleState.OPEN;
         // reset the player array and timestamp
+
         /* -----------------INTERRACTIONS---------------- */
         uint256 platform_fee = (address(this).balance * PLATFORM_FEE_RATE) / 100; // 5% of entrance fee subtracted from amount winner receives
-        uint256 winner_prize = address(this).balance - platform_fee; 
+        uint256 winner_prize = address(this).balance - platform_fee;
         emit PlatFormPaid(platform_fee);
         (bool success,) = payable(winner).call{value: winner_prize}(""); // no functions parameters required
-       if(!success){
+        if (!success) {
             revert Raffle_CouldNotPayWinner();
-       }
+        }
     }
-
 
     // function getRaffleState
     function getRaffleState() external view returns (RaffleState) {

@@ -5,7 +5,7 @@ import {Test, console} from "forge-std/Test.sol";
 import {DeployRaffle} from "../script/DeployRaffle.s.sol";
 import {Raffle} from "../src/Raffle.sol";
 import {HelperConfig} from "../script/HelperConfig.s.sol";
-import {CreateSubscription} from "../script/Interractions.s.sol";
+import {CustomSubscription} from "../script/Interractions.s.sol";
 import {Vm} from "forge-std/Vm.sol";
 import {VRFCoordinatorV2_5Mock} from "@chainlink/contracts/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
 
@@ -13,11 +13,11 @@ import {VRFCoordinatorV2_5Mock} from "@chainlink/contracts/src/v0.8/vrf/mocks/VR
 1. Test raffle openstate is OPEN
 2. Test raffle revert with not enough entrance fee
 3. Test raffle emits the exact event
-4. Test raffle decline attempts to enter while calculating ; 
-   i.create subscripiton 
+4. Test raffle decline attempts to enter while calculating ;
+   i.create subscripiton
    ii. fund subscription
-   iii. get subscription id dynamically 
-5. 
+   iii. get subscription id dynamically
+5.
 */
 
 contract Raffle_Test is Test {
@@ -40,13 +40,12 @@ contract Raffle_Test is Test {
     uint32 callbackGasLimit;
     address link;
 
-
     function setUp() public {
         //give user some funds before hand
         vm.deal(USER, STARTING_BALANCE);
         //Deploy contract & use returned raffle to test OPEN-STATE
         DeployRaffle deploy_raffle = new DeployRaffle();
-        (raffle, helperConfig) = deploy_raffle.deployRaffle();
+        (raffle, helperConfig) = deploy_raffle.run();
 
         HelperConfig.NetworkConfig memory config = helperConfig.getNetworkConfig();
         entranceFee = config.entranceFee;
@@ -59,8 +58,6 @@ contract Raffle_Test is Test {
 
         vm.deal(vrfCoordinator, 10 ether);
     }
-
-
 
     //Test Raffle Openstate
     function testRaffleOpenState() public view {
@@ -91,7 +88,6 @@ contract Raffle_Test is Test {
         raffle.enterRaffle{value: 0.5 ether}();
     }
 
-    
     //
     function testPerformUpkeepOnlyRunIfCheekUpkeep() public {
         vm.prank(USER); // simulate use
@@ -119,7 +115,7 @@ contract Raffle_Test is Test {
                 Raffle.Raffle_UpkeepNotNeeded.selector,
                 address(raffle).balance,
                 raffle.getTotalPlayers(),
-                raffle.getInterval() 
+                raffle.getInterval()
             )
         );
         raffle.performUpkeep("");
@@ -138,32 +134,29 @@ contract Raffle_Test is Test {
         assert(uint256(raffleState) == 1); // ensure raffle opens
     }
 
-   
     //---------------------------------------------------------------------------------------------------------------------------
     //----------------->>>>>>>>>>>>>           Problematic tests            <<<<<<<<<<<<<<------------------------------
     //---------------------------------------------------------------------------------------------------------------------------
     function testRaffleEmitsWinnerPicked() public UpkeepConditionMet {
-        /* Upkeep must be needed before winner can be picked: 
-        1. enough time has passed 
+        /* Upkeep must be needed before winner can be picked:
+        1. enough time has passed
         2. raffle has balance
         3. users have entered raffle
         */
         vm.warp(1 weeks);
         vm.expectEmit();
-        emit  LogResult(1);
+        emit LogResult(1);
         raffle.performUpkeep("");
     }
 
-
-     // test perform upkeep only runs after checkUpkeep
+    // test perform upkeep only runs after checkUpkeep
     function testUpkeepRunsOnlyAfterCheckUpkeep(uint256 random_id) public UpkeepConditionMet {
-        //expect a specific error 
+        //expect a specific error
         vm.expectRevert(VRFCoordinatorV2_5Mock.InvalidRequest.selector);
         VRFCoordinatorV2_5Mock(vrfCoordinator).fulfillRandomWords(random_id, address(raffle));
     }
 
-
-// Test raffle actually close and give the appropriate winner  the funds
+    // Test raffle actually close and give the appropriate winner  the funds
     function testRaffleClosesAndAwardWinner() public {
         uint256 starting_index = 1;
         uint256 additional_entrance = 3;
@@ -175,23 +168,23 @@ contract Raffle_Test is Test {
         }
         uint256 starting_timestamp = raffle.getRecentTimestamp();
         // get subscription id
-        vm.warp(starting_timestamp + 1 weeks ); // warp times 
+        vm.warp(starting_timestamp + 1 weeks); // warp times
         vm.recordLogs();
         raffle.performUpkeep("");
         Vm.Log[] memory entries = vm.getRecordedLogs();
         bytes32 request_id = entries[1].topics[1];
 
-       //test
+        //test
         //fufil random words - choose a winner
         VRFCoordinatorV2_5Mock(vrfCoordinator).fulfillRandomWords(uint256(request_id), address(raffle));
         entries = vm.getRecordedLogs();
         bool winnerPickEmitted = false;
-        for(uint256 i=0; i<entries.length; i++){
-            if(entries[i].topics[0] == keccak256("RaffleWinnerPicked(address)")){
+        for (uint256 i = 0; i < entries.length; i++) {
+            if (entries[i].topics[0] == keccak256("RaffleWinnerPicked(address)")) {
                 winnerPickEmitted = true;
             }
         }
-        assertTrue(winnerPickEmitted, "No such event Emitted " );
+        assertTrue(winnerPickEmitted, "No such event Emitted ");
         //winner, state , endingtimestamp
         address winner = raffle.getRecentWinner(); // ending state
         uint256 winnerBalance = winner.balance;
@@ -201,7 +194,4 @@ contract Raffle_Test is Test {
 
         assertEq(uint256(raffleState), 0); // raffle opn
     }
-
- 
-
 }

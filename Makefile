@@ -8,6 +8,7 @@ endif
 ETHERSCAN_API_KEY := ${ETHERSCAN_KEY_API}
 DEPLOYER_KEY_SEPOLIA := ${SEPOLIA_PRIVATE_KEY}
 INFURA_SEPOLIA_RPC := ${SEPOLIA_ENDPOINT}
+ANVIL_PRIVATE_KEY:=${ANVIL_PRIVATE_KEY}
 
 # --- Compile contracts ---
 build:
@@ -29,11 +30,14 @@ deploy_raffle_sepolia:
 	@echo "Raffle deployed to Sepolia and verified on Etherscan."
 
 # --- Deploy raffle to Anvil (local chain) ---
-deploy_raffle_anvil:
+deploy_raffle_anvil: 
 	forge script script/DeployRaffle.s.sol:DeployRaffle \
-		--rpc-url http://127.0.0.1:8545 \
-		--broadcast
-	@echo "Raffle deployed to Anvil."
+		--rpc-url  http://127.0.0.1:8545 \
+		--private-key ${ANVIL_PRIVATE_KEY}\
+		--broadcast\
+		--slow\
+		-vvvv
+	
 
 
 clean:
