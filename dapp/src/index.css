@@ -1,0 +1,34 @@
+
+@font-face {
+  font-family: Space-Grotesk;
+  src: url('./assets/fonts/SpaceGrotesk-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900; /* variable font supports multiple weights */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: Share-Tech-Mono;
+  src: url('./assets/fonts/ShareTechMono-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: Gochi-hand;
+  src: url('./assets/fonts/GochiHand-Regular.ttf');
+}
+
+@font-face {
+  font-family: Doto;
+  src: url('./assets/fonts/doto.ttf');
+}
+
+@import  'tailwindcss';
+
+
+@theme{
+  --font-grotesk: Space-Grotesk;
+  --font-share-tech-mono: Share-Tech-Mono;
+  --font-gochi-hand:Gochi-hand;
+  --font-doto: Doto;
+}
