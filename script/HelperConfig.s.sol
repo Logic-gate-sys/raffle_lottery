@@ -108,11 +108,10 @@ contract HelperConfig is Script, CodeConstants {
                 interval: 30, // 30 seconds
                 vrfCoordinator: address(vrfCoordinatorMock),
                 keyHash: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
-                s_subscriptionId:0 , // would be created automatically
+                s_subscriptionId: 0 , // would be created automatically
                 callbackGasLimit: 500000,
                 link: address(linktoken)
             });
-
             //return network config
             return localNetworkConfig;
         }

@@ -11,17 +11,25 @@ import {DevOpsTools} from "lib/foundry-devops/src/DevOpsTools.sol";
 
 contract CustomSubscription is Script, CodeConstants {
     uint256 public constant FUND_AMOUNT = 100e18; // 100 LINK == 100 ethers
+    HelperConfig helperconfig = new HelperConfig() ;
+    HelperConfig.NetworkConfig  config = helperconfig.getNetworkConfigByChainId(block.chainid);
     
     // run 
-    function run(address vrfcoordinatorV2_5,  address contractAddress, HelperConfig.NetworkConfig memory config) public {
+    function run( ) public returns(HelperConfig.NetworkConfig memory ) {
             // create subscription 
+            address vrfcoordinatorV2_5 = config.vrfCoordinator ;
             (config.s_subscriptionId, config.vrfCoordinator) = createSubscription(vrfcoordinatorV2_5);
             // funding subscription 
-            fundSubscriptionByConfig(config); 
-            // add consumer 
-            addConsumerContract(config);
+            uint256 sub_id = config.s_subscriptionId;
+           address vrfCoordinator = config.vrfCoordinator;
+           address link = config.link;
+           fundSubscription(sub_id, vrfCoordinator, link); 
+        
+           // return helper config 
+           return config;
         }
        
+
     // -------------- create subscripiton -----------------------------------------------------------
     function createSubscription(address vrfCoordinatorV2_5) public returns (uint256, address) {
         console.log("Creating subscription on chainId: ",  block.chainid);
@@ -29,16 +37,10 @@ contract CustomSubscription is Script, CodeConstants {
 
         console.log("Your subscription Id is: ", subId);
         console.log("Please update the subscriptionId in HelperConfig");
-        return (subId, vrfCoordinatorV2_5);
+        return (subId,  vrfCoordinatorV2_5);
     }
 
     //---------------- fund subscription ---------------------------------------------
-
-    function fundSubscriptionByConfig(HelperConfig.NetworkConfig memory  config) public {
-        uint256 sub_id = config.s_subscriptionId;
-        address vrfCoordinator = config.vrfCoordinator;
-        return fundSubscription(sub_id, vrfCoordinator, address(config.link));
-    }
 
     function fundSubscription(uint256 sub_id, address vrfCoordinator, address link) public {
         if (block.chainid == LOCAL_CHAINID) {
@@ -53,22 +55,11 @@ contract CustomSubscription is Script, CodeConstants {
     }
 
    // ------------------ adding consumer ------------------------------------------
-    function addConsumerContract(HelperConfig.NetworkConfig memory  config) public {
-        address mostRecentlyDeployed = DevOpsTools.get_most_recent_deployment("Raffle", block.chainid); //
-        addConsumerByConfig(mostRecentlyDeployed, config);
-    }
-    // add consumer by hwlper config
-
-    function addConsumerByConfig(address mostRecentlyDeployed, HelperConfig.NetworkConfig memory config) public {
-        uint256 sub_id = config.s_subscriptionId;
-        address vrfCoordinator = config.vrfCoordinator;
-        addConsumer(mostRecentlyDeployed, vrfCoordinator, sub_id);
-    }
-
+    
     // add consumer
     function addConsumer(address contractToAddTovrf, address vrfCoordinator, uint256 sub_id) public {
         console.log("Adding consumer to contract with vrfCoordinator: ------>>> ", vrfCoordinator);
-        VRFCoordinatorV2_5Mock(vrfCoordinator).addConsumer(sub_id, contractToAddTovrf);
+        VRFCoordinatorV2_5Mock(vrfCoordinator).addConsumer(sub_id,  contractToAddTovrf);
     }
    
 }

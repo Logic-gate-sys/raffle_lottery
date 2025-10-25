@@ -29,9 +29,11 @@ contract Raffle_Test is Test {
     error Raffle_UpkeepNotNeeded(uint256 balance, uint256 players, uint256 interval);
 
     Raffle public raffle;
-    HelperConfig public helperConfig;
+    HelperConfig.NetworkConfig public config;
     uint256 public constant STARTING_BALANCE = 10 ether;
     address USER = makeAddr("user");
+
+    // network configs
     uint256 entranceFee;
     uint256 interval;
     address vrfCoordinator;
@@ -45,9 +47,8 @@ contract Raffle_Test is Test {
         vm.deal(USER, STARTING_BALANCE);
         //Deploy contract & use returned raffle to test OPEN-STATE
         DeployRaffle deploy_raffle = new DeployRaffle();
-        (raffle, helperConfig) = deploy_raffle.run();
-
-        HelperConfig.NetworkConfig memory config = helperConfig.getNetworkConfig();
+        (raffle, config) = deploy_raffle.run();
+        // update network configurations
         entranceFee = config.entranceFee;
         interval = config.interval;
         vrfCoordinator = config.vrfCoordinator;
@@ -143,7 +144,6 @@ contract Raffle_Test is Test {
         2. raffle has balance
         3. users have entered raffle
         */
-        vm.warp(1 weeks);
         vm.expectEmit();
         emit LogResult(1);
         raffle.performUpkeep("");
