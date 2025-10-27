@@ -2,7 +2,8 @@
  * Custom types used throughout the project are declared in this file
  */
 
-import { Wind } from "lucide-react";
+import { Provider } from "ethers";
+
 
 declare global {
 
@@ -17,4 +18,15 @@ declare global {
     address: string;
     }
     
+    interface Raffle_Detail{
+        total_players: number;
+        entrance_fee: number;
+        interval: number;
+    }
+
+    interface Web3ProviderPack{
+        wallet: string;
+        provider: Provider;
+        signer: Signer
+   }
 }

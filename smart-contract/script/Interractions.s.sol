@@ -11,33 +11,32 @@ import {DevOpsTools} from "lib/foundry-devops/src/DevOpsTools.sol";
 
 contract CustomSubscription is Script, CodeConstants {
     uint256 public constant FUND_AMOUNT = 100e18; // 100 LINK == 100 ethers
-    HelperConfig helperconfig = new HelperConfig() ;
-    HelperConfig.NetworkConfig  config = helperconfig.getNetworkConfigByChainId(block.chainid);
-    
-    // run 
-    function run( ) public returns(HelperConfig.NetworkConfig memory ) {
-            // create subscription 
-            address vrfcoordinatorV2_5 = config.vrfCoordinator ;
-            (config.s_subscriptionId, config.vrfCoordinator) = createSubscription(vrfcoordinatorV2_5);
-            // funding subscription 
-            uint256 sub_id = config.s_subscriptionId;
-           address vrfCoordinator = config.vrfCoordinator;
-           address link = config.link;
-           fundSubscription(sub_id, vrfCoordinator, link); 
-    
-           // return helper config 
-           return config;
-        }
-       
+    HelperConfig helperconfig = new HelperConfig();
+    HelperConfig.NetworkConfig config = helperconfig.getNetworkConfigByChainId(block.chainid);
+
+    // run
+    function run() public returns (HelperConfig.NetworkConfig memory) {
+        // create subscription
+        address vrfcoordinatorV2_5 = config.vrfCoordinator;
+        (config.s_subscriptionId, config.vrfCoordinator) = createSubscription(vrfcoordinatorV2_5);
+        // funding subscription
+        uint256 sub_id = config.s_subscriptionId;
+        address vrfCoordinator = config.vrfCoordinator;
+        address link = config.link;
+        fundSubscription(sub_id, vrfCoordinator, link);
+
+        // return helper config
+        return config;
+    }
 
     // -------------- create subscripiton -----------------------------------------------------------
     function createSubscription(address vrfCoordinatorV2_5) public returns (uint256, address) {
-        console.log("Creating subscription on chainId: ",  block.chainid);
+        console.log("Creating subscription on chainId: ", block.chainid);
         uint256 subId = VRFCoordinatorV2_5Mock(vrfCoordinatorV2_5).createSubscription(); // from subscriptions in the VRFCoordinatorV2_5Mock contract
 
         console.log("Your subscription Id is: ", subId);
         console.log("Please update the subscriptionId in HelperConfig");
-        return (subId,  vrfCoordinatorV2_5);
+        return (subId, vrfCoordinatorV2_5);
     }
 
     //---------------- fund subscription ---------------------------------------------
@@ -54,14 +53,12 @@ contract CustomSubscription is Script, CodeConstants {
         }
     }
 
-   // ------------------ adding consumer ------------------------------------------
-    
+    // ------------------ adding consumer ------------------------------------------
+
     // add consumer
     function addConsumer(address contractToAddTovrf, address vrfCoordinator, uint256 sub_id) public {
         console.log("Adding consumer to contract with vrfCoordinator: ------>>> ", vrfCoordinator);
-        VRFCoordinatorV2_5Mock(vrfCoordinator).addConsumer(sub_id,  contractToAddTovrf);
+        VRFCoordinatorV2_5Mock(vrfCoordinator).addConsumer(sub_id, contractToAddTovrf);
     }
-   
 }
 
-    

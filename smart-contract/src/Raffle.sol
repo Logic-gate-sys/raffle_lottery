@@ -39,11 +39,13 @@ contract Raffle is VRFConsumerBaseV2Plus {
     error Raffle_WinnerPaymentFail();
     error Raffle_UpkeepNotNeeded(uint256 balance, uint256 players, uint256 interval);
     error Raffle_CouldNotPayWinner();
+    error Raffle_RaffleIsNotOpened();
 
     /*----------------------------- Type declarations ---------------------------*/
     enum RaffleState {
         OPEN, //0
-        CALCULATING //1
+        CALCULATING, //1
+        CLOSED
     }
 
     /*------------------------ Variables --------------------------------------- */
@@ -54,6 +56,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
     address private mostRecentWinner;
     RaffleState private s_raffleState; // state of raffle
     uint256 constant PLATFORM_FEE_RATE = 5; // 2% platform fee
+    uint256 private s_raffle_count;
 
     //constant
     uint16 private constant REQUEST_CONFIRMATIONS = 3; //number of block confirmations
@@ -71,6 +74,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
     event RaffleWinnerPicked(address indexed winner);
     event LogResult(uint256 indexed req_id);
     event PlatFormPaid(uint256 indexed platform_fee);
+    event Raffle_Reopened(uint256 count);
 
     constructor(
         uint256 entranceFee,
@@ -89,11 +93,16 @@ contract Raffle is VRFConsumerBaseV2Plus {
         i_keyHash = keyHash;
         i_subscriptionId = s_subscriptionId;
         i_callbackGasLimit = callbackGasLimit;
+        s_raffle_count = 1;
     }
 
     function enterRaffle() external payable {
         if (msg.value < i_entranceFee) {
             revert Raffle_NotEnoughtFund();
+        }
+        // also check that raffle is opened
+        if(s_raffleState == RaffleState.CLOSED){
+            revert Raffle_RaffleIsNotOpened();
         }
         s_players.push(payable(msg.sender)); // add player to player list
         emit RaffleEntered(msg.sender); // emit event
@@ -130,6 +139,9 @@ contract Raffle is VRFConsumerBaseV2Plus {
     )
         external
     {
+        // call internal open rafflestate
+        _openRaffleState();
+        // check that upkeep is needed
         (bool upKeepNeeded) = checkUpkeep("");
         if (!upKeepNeeded) {
             revert Raffle_UpkeepNotNeeded(address(this).balance, s_players.length, i_interval);
@@ -157,6 +169,20 @@ contract Raffle is VRFConsumerBaseV2Plus {
         emit LogResult(request_id);
     }
 
+
+
+     // ------------------------ open raffle state ----------------------------------------------------
+    function _openRaffleState() internal {
+        if(s_raffleState == RaffleState.CLOSED){
+            // check time interval since last winner 
+            uint256 interval_since_lastWinner = s_lastTimestamp - block.timestamp;
+            //open raffle if enough time has passed
+            if(interval_since_lastWinner >=1 hours){
+                s_raffleState = RaffleState.OPEN ;
+            }
+        }
+    }
+
     // -------------------------------------- fulfil random words function -------------------------------------------------------
     function fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal override {
         /*---------------------CHECKS------------------*/
@@ -182,11 +208,20 @@ contract Raffle is VRFConsumerBaseV2Plus {
         if (!success) {
             revert Raffle_CouldNotPayWinner();
         }
+        
+        ++ s_raffle_count ;
+        //emit raffle reopen
+        emit Raffle_Reopened(s_raffle_count);
     }
 
     // function getRaffleState
     function getRaffleState() external view returns (RaffleState) {
         return s_raffleState;
+    }
+    // get interval since raffle reopens
+    function getIntervalSince_RaffleReopens() external view returns(uint256){
+        uint256 interval_since_raffle_reopened = s_lastTimestamp - block.timestamp;
+        return interval_since_raffle_reopened;
     }
 
     // get most recent winner
@@ -203,9 +238,13 @@ contract Raffle is VRFConsumerBaseV2Plus {
     function getTotalPlayers() external view returns (uint256) {
         return s_players.length;
     }
+    // get entrance fee 
+    function getEntranceFee() external view returns(uint256){
+        return i_entranceFee;
+    }
     // timestamp
-
     function getRecentTimestamp() external view returns (uint256) {
         return s_lastTimestamp;
     }
+   
 }

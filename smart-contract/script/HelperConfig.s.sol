@@ -97,7 +97,8 @@ contract HelperConfig is Script, CodeConstants {
             Deploy a mock VRC_CoordinatorV2_5 mock contract to request and fullfil random words using the local anvil chain
              */
 
-            VRFCoordinatorV2_5Mock vrfCoordinatorMock = new VRFCoordinatorV2_5Mock(MOCK_BASE_FEE, MOCK_GAS_PRICE_LINK, WEI_PER_UNIT_LINK);
+            VRFCoordinatorV2_5Mock vrfCoordinatorMock =
+                new VRFCoordinatorV2_5Mock(MOCK_BASE_FEE, MOCK_GAS_PRICE_LINK, WEI_PER_UNIT_LINK);
 
             // deploy a mock link token to fund the mock VRFCoordinator 2_5 contract
             LinkToken linktoken = new LinkToken(); // deploy link token and use it address
@@ -108,7 +109,7 @@ contract HelperConfig is Script, CodeConstants {
                 interval: 30, // 30 seconds
                 vrfCoordinator: address(vrfCoordinatorMock),
                 keyHash: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
-                s_subscriptionId: 0 , // would be created automatically
+                s_subscriptionId: 0, // would be created automatically
                 callbackGasLimit: 500000,
                 link: address(linktoken)
             });

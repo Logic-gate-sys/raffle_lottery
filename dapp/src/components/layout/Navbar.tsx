@@ -4,7 +4,7 @@ import { Menu, X, Home, Grid, User, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ConnectWallet } from "../../bc_interactions/wallet";
 
-const Navbar = () => {
+const Navbar = ({ setWalletDetail }:any) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   
@@ -15,12 +15,15 @@ const Navbar = () => {
       alert("Wallet connected sucessfully");
       console.log("Signer -------->>> : ", signer);
       console.log("Provider ------>>> : ", provider);
-      console.log("Wallet -------->>> : ", address);  
+      console.log("Wallet -------->>> : ", address); 
+      //set the wallet details
+      setWalletDetail({address, provider,signer});
     } catch (err) {
-      console.log("Could not connect to wallet ")
+      console.log("Could not connect to wallet ");
       console.log(err);
     }
   }
+
 
   return (
     <nav className="font-doto  bg-[#202533] text-white fixed md:relative w-fit h-screen flex flex-col shadow-xl z-50">
@@ -82,7 +85,7 @@ const Navbar = () => {
 
         {/* Connect Wallet Button */}
         <div className="mb-4 p-2 mt-auto">
-          <button onClick={() => handleConnect()} className="w-fit bg-blue-600 py-2 px-4 rounded-lg hover:bg-blue-700 active:scale-95 transition">
+          <button onClick={handleConnect} className="w-fit bg-blue-600 py-2 px-4 rounded-lg hover:bg-blue-700 active:scale-95 transition">
             Connect Wallet
           </button>
         </div>

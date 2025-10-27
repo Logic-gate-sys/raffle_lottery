@@ -13,8 +13,8 @@ contract DeployRaffle is Script {
 
     function run() external returns (Raffle, HelperConfig.NetworkConfig memory) {
         CustomSubscription subs = new CustomSubscription();
-        HelperConfig.NetworkConfig memory config = subs.run( );
-          /**
+        HelperConfig.NetworkConfig memory config = subs.run();
+        /**
          * Deploy and broadcast the raffle contract to the blochchain
          * Retrieve the raffle contract's address to be used as a consumer to add to the subscription created
          */
@@ -31,16 +31,16 @@ contract DeployRaffle is Script {
 
         // //creating subscription
         // if (config.s_subscriptionId == 0) {
-            /**
-             * Create subscription programatically and assigned :
-             * subscription id to replace the 0 we put for subId in the network configurations
-             * replace the vrfcoordinator address with the created address
-             */
-         
+        /**
+         * Create subscription programatically and assigned :
+         * subscription id to replace the 0 we put for subId in the network configurations
+         * replace the vrfcoordinator address with the created address
+         */
+
         // }
-        // add raffle as a consumer 
+        // add raffle as a consumer
         subs.addConsumer(address(raffle), config.vrfCoordinator, config.s_subscriptionId);
-      
+
         return (raffle, config);
     }
 }

@@ -1,5 +1,6 @@
 //Ethers library provide a way to interact with th blockchain 
 
+import { Provider } from 'ethers';
 import { ethers } from 'ethers';
 
 /**
@@ -20,7 +21,6 @@ export async function ConnectWallet() : Promise<EthereumEssentials>  {
     // get signer 
     const signer = await provider.getSigner();
 
-
     // return signer, provider and wallet 
     return {
         signer: signer,
@@ -29,3 +29,14 @@ export async function ConnectWallet() : Promise<EthereumEssentials>  {
     };
 } 
 
+
+// get balance of an account 
+export async  function getAccountBalance(provider : Provider): Promise<bigint> {
+    let balance = await provider.getBalance("ethers.eth");
+    if (!balance) {
+        throw new Error("Could not get account balance , Invalid account details")
+    }
+    // format balance into Eth
+    // balance = ethers.utils.formatEther(balance);
+    return balance;
+}
